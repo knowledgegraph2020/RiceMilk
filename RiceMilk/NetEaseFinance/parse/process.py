@@ -8,10 +8,10 @@ def parse_international(response, start_dt, end_dt):
     path = '/data/files/'+ end_dt + '/NetEaseFinance/international'
     if start_dt is None:
         # 递归获取当前时间以前的所有新闻
-        recursive_international(response,path)
+        recursive_international(response, path)
     elif start_dt is not None and end_dt is not None:
         # 只获取指定时间段的新闻
-        range_recursive(response, start_dt, end_dt,path)
+        range_recursive(response, start_dt, end_dt, path)
 
 
 def parse_HKstock(response, start_dt, end_dt):
