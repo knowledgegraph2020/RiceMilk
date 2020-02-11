@@ -1,7 +1,6 @@
 from scrapy.spiders import Spider
 import scrapy
-from RiceMilk.tools.http_tools import get_html
-from RiceMilk.SohuFinance.parse.parse_detail import pro_sohu_head_line
+import RiceMilk.SohuFinance.parse.parse_detail as pdl
 from RiceMilk.SohuFinance.parse.process import make_save_dir
 import os
 import time
@@ -12,181 +11,75 @@ class SohuSpider(Spider):
     start_urls = ['https://business.sohu.com/']
 
     def parse(self, response):
-        # http_links = []
-        news_links = []
-        news_titles = []
-
-        # 头条通常不是一个单独新闻，链接中包含一系列新闻，herf以http开头
-        # // *[ @ id = "main-container"] / div[4] / div[2] / div[1] / div[1] / h1 / a
-        head_line_url = response.xpath('//*[@id="main-container"]/div[4]/div[2]/div[1]/div[1]/h1/a/@href').extract_first()
-        print(head_line_url)
-        if head_line_url.startswith('http'):
-            head_line_links, head_line_titles = pro_sohu_head_line(head_line_url)
-            news_links.extend(head_line_links)
-            news_titles.extend(head_line_titles)
+        news_dict = {}
 
         # h0
         print("h0================================================")
-        for sel in response.xpath('//*[@id="main-container"]/div[4]/div[2]/div[1]/div[1]'):
-            title = sel.xpath('.//a/text()').extract()
-            link = sel.xpath('.//a/@href').extract()
-            print(title)
-            print(link)
-            news_links.extend(link)
-            news_titles.extend(title)
+        headline0_links, headline0_titles = pdl.parse_headline0(response)
+        #print(headline0_links, headline0_titles)
+        print("The number of {} news is {}.".format("headline0", len(headline0_links)))
+        news_dict["headline0"] = {"links": headline0_links, "titles": headline0_titles}
 
-        #h1
+        # h1
         print("h1================================================")
-        #//*[@id="main-container"]/div[4]/div[2]/div[1]/div[2]/h1/a
-        #//*[@id="main-container"]/div[4]/div[2]/div[1]/div[2]/p
-        for sel in response.xpath('//*[@id="main-container"]/div[4]/div[2]/div[1]/div[2]'):
-            title = sel.xpath('.//a/text()').extract()
-            link = sel.xpath('.//a/@href').extract()
-            print(title)
-            print(link)
-            news_links.extend(link)
-            news_titles.extend(title)
+        headline1_links, headline1_titles = pdl.parse_headline1(response)
+        #print(headline1_links, headline1_titles)
+        print("The number of {} news is {}.".format("headline1", len(headline1_links)))
+        news_dict["headline1"] = {"links": headline1_links, "titles": headline1_titles}
 
-        print("财经要闻=================================================")
-        #//*[@id="main-container"]/div[4]/div[2]/div[2]/ul[1]/li[2]/a
-        #//*[@id="main-container"]/div[4]/div[2]/div[2]/ul[2]/li[1]/a
-        for sel in response.xpath('//*[@id="main-container"]/div[4]/div[2]/div[2]/ul'):
-            for sub_sel in sel.xpath('.//li'):
-                title = sub_sel.xpath('.//a/text()').extract()
-                link = sub_sel.xpath('.//a/@href').extract()
-                print(title)
-                print(link)
-                news_links.extend(link)
-                news_titles.extend(title)
+        print("财经要闻============================================")
+        print("财经新闻============================================")
+        financialnews_links, financialnews_titles = pdl.parse_financialnews(response)
+        print("The number of {} news is {}.".format("financial", len(financialnews_links)))
+        news_dict["financial"] = {"links": financialnews_links, "titles": financialnews_titles}
+        #print(financialnews_links, financialnews_titles)
 
-        # 财经新闻
-        print("财经新闻=================================================")
-        # //*[@id="main-container"]/div[6]/div[1]/div[2]/div/div[1]/ul/li[1]/a
-        # //*[@id="main-container"]/div[6]/div[1]/div[2]/div/div[2]/ul/li[1]/a
-        for sel in response.xpath('//*[@id="main-container"]/div[6]/div[1]/div[2]/div/div'):
-            for sub_sel in sel.xpath('.//ul'):
-                title = sub_sel.xpath('.//a/text()').extract()
-                link = sub_sel.xpath('.//a/@href').extract()
-                print(title)
-                print(link)
-                news_links.extend(link)
-                news_titles.extend(title)
+        print("股市理财=============================================")
+        stockmoneynews_links, stockmoneynews_titles = pdl.parse_stockmoneynews(response)
+        print("The number of {} news is {}.".format("stock_and_money", len(stockmoneynews_links)))
+        news_dict["stock_and_money"] = {"links": stockmoneynews_links, "titles": stockmoneynews_titles}
 
-        # 股市理财
-        print("股市理财=================================================")
-        # //*[@id="main-container"]/div[6]/div[1]/div[4]/div[2]/div[1]/ul/li[1]/a
-        # //*[@id="main-container"]/div[6]/div[1]/div[4]/div[2]/div[2]/ul/li[1]/a
-        for sel in response.xpath('//*[@id="main-container"]/div[6]/div[1]/div[4]/div[2]/div'):
-            for sub_sel in sel.xpath('.//ul'):
-                title = sub_sel.xpath('.//a/text()').extract()
-                link = sub_sel.xpath('.//a/@href').extract()
-                print(title)
-                print(link)
-                news_links.extend(link)
-                news_titles.extend(title)
+        print("公司产业==============================================")
+        companyindustrynews_links, companyindustrynews_titles = pdl.parse_companyindustrynews(response)
+        print("The number of {} news is {}.".format("company_and_industry", len(companyindustrynews_links)))
+        news_dict["company_and_industry"] = {"links": companyindustrynews_links, "titles": companyindustrynews_titles}
 
-        # 公司产业
-        print("公司产业=================================================")
-        # //*[@id="main-container"]/div[6]/div[1]/div[4]/div[2]/div[1]/ul/li[1]/a
-        # //*[@id="main-container"]/div[6]/div[1]/div[4]/div[2]/div[2]/ul/li[1]/a
-        for sel in response.xpath('//*[@id="main-container"]/div[6]/div[1]/div[4]/div[2]/div'):
-            for sub_sel in sel.xpath('.//ul'):
-                title = sub_sel.xpath('.//a/text()').extract()
-                link = sub_sel.xpath('.//a/@href').extract()
-                print(title)
-                print(link)
-                news_links.extend(link)
-                news_titles.extend(title)
+        print("楼市观察,消费白酒======================================")
+        estateliquornews_links, estateliquornews_titles = pdl.parse_estateliquornews(response)
+        print("The number of {} news is {}.".format("estate_and_liquor", len(estateliquornews_links)))
+        news_dict["estate_and_liquor"] = {"links": estateliquornews_links, "titles": estateliquornews_titles}
 
-        # 楼市观察,消费白酒
-        print("楼市观察,消费白酒=================================================")
-        # //*[@id="main-container"]/div[8]/div[1]/div[2]/div[2]/div[1]/ul/li[1]/a
-        # //*[@id="main-container"]/div[8]/div[1]/div[2]/div[2]/div[2]/ul/li[2]/a
-        for sel in response.xpath('//*[@id="main-container"]/div[8]/div[1]/div[2]/div[2]/div'):
-            for sub_sel in sel.xpath('.//ul'):
-                title = sub_sel.xpath('.//a/text()').extract()
-                link = sub_sel.xpath('.//a/@href').extract()
-                print(title)
-                print(link)
-                news_links.extend(link)
-                news_titles.extend(title)
+        print("315曝光,财经人物=======================================")
+        businessmen315news_links, businessmen315news_titles = pdl.parse_315businessmennews(response)
+        print("The number of {} news is {}.".format("businessmen_and_315", len(businessmen315news_links)))
+        news_dict["businessmen_and_315"] = {"links": businessmen315news_links, "titles": businessmen315news_titles}
 
-        print(news_links)
-        print(len(news_links))
+        print("公司深读===============================================")
+        companydeepnews_links, companydeepnews_titles = pdl.parse_companydeepnews(response)
+        print("The number of {} news is {}.".format("company_deep", len(companydeepnews_links)))
+        news_dict["company_deep"] = {"links": companydeepnews_links, "titles": companydeepnews_titles}
+
+        print("24小时热文=============================================")
+        hot24hnews_links, hot24hnews_titles = pdl.parse_hot24hnews(response)
+        print("The number of {} news is {}.".format("hotnews_24h", len(hot24hnews_links)))
+        news_dict["hotnews_24h"] = {"links": hot24hnews_links, "titles": hot24hnews_titles}
+
         url_head = 'http:'
-        for i in range(len(news_links)):
-            url = news_links[i]
-            if url.startswith('//'):
-                yield scrapy.Request(url=url_head + url, callback=self.process_news_link, meta={'title': news_titles[i], 'link': url})
+        for news_type, news in news_dict.items():
+            #print(news_type, news)
+            news_links = news['links']
+            news_titles = news['titles']
+            for i in range(len(news_links)):
+                url = news_links[i]
+                if url.startswith('//'):
+                    yield scrapy.Request(url=url_head + url, callback=self.save_news_cont,
+                                         meta={'title': news_titles[i], 'link': url, 'type': news_type})
 
-        # 315曝光,财经人物
-        print("315曝光,财经人物=================================================")
-        # //*[@id="main-container"]/div[8]/div[1]/div[2]/div[3]/div[1]/ul/li[1]/a
-        # //*[@id="main-container"]/div[8]/div[1]/div[2]/div[3]/div[2]/ul/li[1]/a
-        for sel in response.xpath('//*[@id="main-container"]/div[8]/div[1]/div[2]/div[3]/div'):
-            for sub_sel in sel.xpath('.//ul'):
-                title = sub_sel.xpath('.//a/text()').extract()
-                link = sub_sel.xpath('.//a/@href').extract()
-                print(title)
-                print(link)
-                news_links.extend(link)
-                news_titles.extend(title)
-
-        print(news_links)
-        print(len(news_links))
-        url_head = 'http:'
-        for i in range(len(news_links)):
-            url = news_links[i]
-            if url.startswith('//'):
-                yield scrapy.Request(url=url_head + url, callback=self.process_news_link,
-                                     meta={'title': news_titles[i], 'link': url})
-
-        # 公司深读
-        print("公司深读=================================================")
-        # //*[@id="main-container"]/div[6]/div[2]/div[2]/div[2]/ul/li[1]/a/span/span
-        # //*[@id="main-container"]/div[6]/div[2]/div[2]/div[2]/ul/li[2]/a/span/span
-        for sel in response.xpath('//*[@id="main-container"]/div[6]/div[2]/div[2]/div[2]/ul/li'):
-            title = sel.xpath('a/span/span/text()').extract()
-            link = sel.xpath('a/span/span/@href').extract()
-            print(title)
-            print(link)
-            news_links.extend(link)
-            news_titles.extend(title)
-
-        print(news_links)
-        print(len(news_links))
-        url_head = 'http:'
-        for i in range(len(news_links)):
-            url = news_links[i]
-            if url.startswith('//'):
-                yield scrapy.Request(url=url_head + url, callback=self.process_news_link,
-                                     meta={'title': news_titles[i], 'link': url})
-
-        # 24小时热文
-        print("24小时热文=================================================")
-        # //*[@id="main-container"]/div[8]/div[2]/div[2]/div[2]/ul/li[1]/a/span/span
-        # //*[@id="main-container"]/div[8]/div[2]/div[2]/div[2]/ul/li[2]/a/span/span
-        for sel in response.xpath('//*[@id="main-container"]/div[8]/div[2]/div[2]/div[2]/ul/li'):
-            title = sel.xpath('a/span/span/text()').extract()
-            link = sel.xpath('a/span/span/@href').extract()
-            print(title)
-            print(link)
-            news_links.extend(link)
-            news_titles.extend(title)
-
-        print(news_links)
-        print(len(news_links))
-        url_head = 'http:'
-        for i in range(len(news_links)):
-            url = news_links[i]
-            if url.startswith('//'):
-                yield scrapy.Request(url=url_head + url, callback=self.process_news_link,
-                                     meta={'title': news_titles[i], 'link': url})
-
-    def process_news_link(self, response):
+    def save_news_cont(self, response):
         title = response.meta['title']
         title = title.replace("/", "|")
-        sohu_save_path = make_save_dir()
+        news_type = response.meta['type']
+        sohu_save_path = make_save_dir(news_type)
         news_path = os.path.join(sohu_save_path, title + '.txt')
         with open(news_path, 'w') as wf:
 
