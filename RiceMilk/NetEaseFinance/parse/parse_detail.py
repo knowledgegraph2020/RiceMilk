@@ -29,11 +29,11 @@ def get_all_urls_by_link(links,
         for l in links:
             try:
                 data = get_html(l)
-                main_title = data.select_one(main_tile_style).get_text()
-                dt = data.select_one(dt_style).get_text()
+                main_title = data.select_one(main_tile_style).get_text().replace("\n", "")
+                dt = data.select_one(dt_style).get_text().replace("\n", "")
                 content = data.select(content_style)
                 content = [c.get_text() for c in content if re.match(pattern, c.get_text())]
-                content = ''.join(content)
+                content = ''.join(content).replace("\n", "")
                 convert_to_file(l, main_title, dt, content, path)
             except Exception as e:
                 print(e)

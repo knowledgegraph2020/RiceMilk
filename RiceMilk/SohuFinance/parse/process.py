@@ -1,7 +1,9 @@
 import RiceMilk.SohuFinance.parse.config as cfg
 import scrapy
 import time
-import os
+import os, re
+import logging
+from logging.handlers import TimedRotatingFileHandler
 
 # def make_save_dir():
 #     today_ = time.strftime("%Y-%m-%d")
@@ -17,24 +19,18 @@ def make_save_dir(news_type):
         os.makedirs(sohu_save_dir)
     return sohu_save_dir
 
-def save_news_cont(response):
-    title = response.meta['title']
-    title = title.replace("/", "|")
-    news_type = response.meta['type']
-    sohu_save_path = make_save_dir(news_type)
-    news_path = os.path.join(sohu_save_path, title + '.txt')
-    with open(news_path, 'w') as wf:
-
-        print(title, response.meta['link'])
-
-        content = response.xpath('//*[@id="mp-editor"]//p//text()').extract()
-        cont = "".join(content)
-        news_time = response.xpath('//*[@id="news-time"]//text()').extract()
-        print(news_time)
-        if news_time:
-            wf.write(news_time[0] + '\n')
-        else:
-            now = time.strftime('%Y-%m-%d %H:%M', time.localtime(time.time()))
-            wf.write(now + '\n')
-        wf.write(cont)
+def get_logger():
+    logger = logging.getLogger("logger")
+    if not logger.handlers:
+        logger.setLevel(logging.INFO)
+        handler = TimedRotatingFileHandler(filename=cfg.log_path,
+                                           when="D",
+                                           interval=1,
+                                           backupCount=90)
+        handler.suffix = "%Y-%m-%d.log"
+        handler.extMatch = re.compile(r"^\d{4}-\d{2}-\d{2}.log$")
+        handler.setLevel(logging.INFO)
+        handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s: %(message)s'))
+        logger.addHandler(handler)
+    return logger
 
