@@ -54,6 +54,8 @@ SPIDER_MIDDLEWARES = {
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
    'RiceMilk.middlewares.RicemilkDownloaderMiddleware': 543,
+   
+   'RiceMilk.middlewares.SeleniumDownloaderMiddleware': 543
 }
 
 # Enable or disable extensions
