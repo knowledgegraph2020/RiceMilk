@@ -10,3 +10,12 @@ def convert_to_file(link, main_title, dt, content, path):
         f.write(main_title + "\n")
         f.write(dt + "\n")
         f.write(content)
+
+
+def add_to_exist_file(link, main_title, dt, content, path):
+    
+    with open(path, 'a') as f:
+        f.write(link + "\n")
+        f.write(main_title + "\n")
+        f.write(dt + "\n")
+        f.write(content+ "\n")

@@ -2,19 +2,20 @@ import RiceMilk.CfiFinance.parse.config as cfg
 import scrapy
 import time
 import os
+import datetime
 
 
 def make_save_dir(news_type):
     today_ = time.strftime("%Y-%m-%d")
     #cfi_save_dir = os.path.join(cfg.save_dir, today_, 'CifiFinance', news_type)
-    cfi_save_dir = os.path.join( "/Users/cengqiqi/Desktop/data/", today_, 'CifiFinance', news_type)
+    cfi_save_dir = os.path.join( cfg.save_dir, today_, 'CifiFinance', news_type)
     if not os.path.exists(cfi_save_dir):
         os.makedirs(cfi_save_dir)
     return cfi_save_dir
 
 
 
-def save_news_cont(news_type, url, time_, title, text):
+def get_full_path(news_type, url, time_, title, text):
     
     # title = title[0]
     Cfi_save_path = make_save_dir(news_type)
@@ -31,17 +32,17 @@ def save_news_cont(news_type, url, time_, title, text):
         
         
         
-        
+  
+def getToday():
+    return time.strftime("%Y-%m-%d")
 
-def convert_to_file(link, main_title, dt, content, path):
+def getYesterday(): 
+    today=datetime.date.today() 
+    oneday=datetime.timedelta(days=1) 
+    yesterday=today-oneday  
+    yesterday = str(yesterday)
+    return yesterday    
 
-    merge_path = path
-    
-    with open(merge_path, 'a') as f:
-        f.write(link + "\n")
-        f.write(main_title + "\n")
-        f.write(dt + "\n")
-        f.write(content+ "\n")
         
         
         

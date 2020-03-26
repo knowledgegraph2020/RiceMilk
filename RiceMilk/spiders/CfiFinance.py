@@ -4,7 +4,8 @@ from scrapy.spiders import Spider
 from RiceMilk.config.init import user_agent_list
 from RiceMilk.CfiFinance.parse.parse_detail import get_news_link_static, get_news_link_JS, parse_Page, get_time
 from RiceMilk.CfiFinance.parse.SeleniumRequest import SeleniumRequest
-from RiceMilk.CfiFinance.parse.process import make_save_dir, save_news_cont, convert_to_file
+from RiceMilk.CfiFinance.parse.process import make_save_dir, get_full_path, getToday, getYesterday
+from RiceMilk.tools.file_tools import add_to_exist_file
 from scrapy import Request
 from termcolor import colored
 
@@ -34,8 +35,8 @@ class CfifinanceSpider(scrapy.Spider):
     forex = True
     
     # 选择新闻访问的日期
-    start_time = '2020-03-25'
-    end_time = '2020-03-25'
+    start_time = getYesterday()
+    end_time = getToday()
 
     def parse(self, response):
         
@@ -243,8 +244,8 @@ class CfifinanceSpider(scrapy.Spider):
         print("date: ")
         print(time_)
         
-        news_path = save_news_cont(news_type, url, time_, title, text)
-        convert_to_file(url, title, time_, text,news_path)
+        news_path = get_full_path(news_type, url, time_, title, text)
+        add_to_exist_file(url, title, time_, text,news_path)
 
     
     
