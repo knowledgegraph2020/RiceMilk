@@ -2,7 +2,7 @@
 
 from scrapy.spiders import Spider
 from RiceMilk.config.init import user_agent_list
-from RiceMilk.CfiFinance.parse.parse_detail import get_news_link_static, get_news_link_JS, parse_Page, get_time
+from RiceMilk.CfiFinance.parse.parse_detail import get_news_link_static, get_news_link_JS, parse_Page, get_time, getPage
 from RiceMilk.CfiFinance.parse.SeleniumRequest import SeleniumRequest
 from RiceMilk.CfiFinance.parse.process import make_save_dir, get_full_path, getToday, getYesterday
 from RiceMilk.tools.file_tools import add_to_exist_file
@@ -24,20 +24,43 @@ class CfifinanceSpider(scrapy.Spider):
         "USER_AGENT": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/32.0.1664.3 Safari/537.36"
         }
     
-    #选择要访问的新闻类型
-    get_static = True # 决定是否要静态页面，一般是要的
-    get_JS = False # 决定一下是否要等待动态页面，会比较慢
+    def __init__(self, get_static = True, get_JS = False,
+                  start_time = getYesterday(), end_time = getYesterday(),
+                  industry = True, stock = True, futures = True, forex = True,
+                  *args,**kwargs):
+        
+        super(CfifinanceSpider, self).__init__(*args,**kwargs)
+        
+    # def __init__(self, get_static,*args,**kwargs):
     
-    # 选择要访问的新闻类别
-    industry = True
-    stock = True
-    futures = True
-    forex = True
+    #     super(CfifinanceSpider, self).__init__(*args,**kwargs)
     
-    # 选择新闻访问的日期
-    start_time = getYesterday()
-    end_time = getToday()
+    
+        # get_JS = False
+        # start_time = getYesterday()
+        # end_time = getYesterday()
+        # industry = True
+        # stock = True
+        # futures = True
+        # forex = True
+        
+        #选择要访问的新闻类型
+        self.get_static = get_static # 决定是否要静态页面，一般是要的
+        self.get_JS = get_JS # 决定一下是否要等待动态页面，会比较慢
+        
+        # 选择要访问的新闻类别
+        self.industry = industry
+        self.stock = stock
+        self.futures = futures
+        self.forex = forex
+        
+        # 选择新闻访问的日期
+        self.start_time =  start_time # 默认值为昨天
+        self.end_time = end_time # 默认值为昨天
 
+
+        
+        
     def parse(self, response):
         
         """ 从中财网首页进入到各个不同大类到新闻 """
@@ -86,8 +109,8 @@ class CfifinanceSpider(scrapy.Spider):
         
         # 去除一些重复或者纯数据类的页面
         if response.meta['name'] == "产经":
-            cates_list = []#cates_list[1:] # 去除产经、期货和外汇的子类别 “首页” 标签
-            cates_name_list = []#cates_name_list[1:]
+            cates_list = cates_list[1:] # 去除产经、期货和外汇的子类别 “首页” 标签
+            cates_name_list = cates_name_list[1:]
         if response.meta['name'] == "股票":
             cates_list = cates_list[3:-1] # 去除股票大类的前三个和最后一个子类别
             cates_name_list = cates_name_list[3:-1]
@@ -107,9 +130,8 @@ class CfifinanceSpider(scrapy.Spider):
         for i in range(len(cates_list)):
             url_news = "http://industry.cfi.cn/" +  cates_list[i]
             #
-            cate_name = "/".join([response.meta['name'],cates_name_list[i]])
             cate_name = "-".join([response.meta['name'],cates_name_list[i]])
-    
+            cate_name.replace("/","or") # 防止原文中的 "/" 使得路径多出一个文件夹
             yield scrapy.Request(url=url_news,
                                   callback=self.parse_subCategory, 
                                   meta={'father_name': response.meta['name'], 
@@ -210,6 +232,15 @@ class CfifinanceSpider(scrapy.Spider):
         text = "".join(text)
         title = title[0]
         
+        if response.meta['first_page'] and insidePage_link:
+            page = str(0)
+            title = '^page_'.join([title, page])
+        if not response.meta['first_page']:
+            page = getPage(url)
+            title = '^page_'.join([title, page])
+            
+            
+        
         # 如果有内页，再循环一次
         if insidePage_link:
             for url_news in insidePage_link:
@@ -233,16 +264,14 @@ class CfifinanceSpider(scrapy.Spider):
                 
         
         print('********************************************************')
-        print('news category')
-        print(news_type)
-        print('url')
-        print(url)
-        print("title: ")
-        print(title)
-        print("text: ")
-        print(text)
-        print("date: ")
-        print(time_)
+        print('news category: ', news_type)
+        print('url: ', url)
+        #print("title: ")
+        #print(title)
+        #print("text: ")
+        #print(text)
+        #print("date: ")
+        #print(time_)
         
         news_path = get_full_path(news_type, url, time_, title, text)
         add_to_exist_file(url, title, time_, text,news_path)
