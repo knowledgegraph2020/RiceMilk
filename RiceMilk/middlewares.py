@@ -142,8 +142,8 @@ class SeleniumDownloaderMiddleware(object):
             chrome_options.add_argument('--disable-gpu')
             chrome_options.add_argument('--no-sandbox')
             
-            #self.driver = webdriver.Chrome(chrome_options=chrome_options,executable_path='/Users/cengqiqi/chromedriver')
-            self.driver = webdriver.Chrome(executable_path='/Users/cengqiqi/chromedriver')
+            self.driver = webdriver.Chrome(chrome_options=chrome_options,executable_path='/data/chromedriver')
+            #self.driver = webdriver.Chrome(executable_path='/Users/cengqiqi/chromedriver')
             
 
             self.driver.get(request.url)

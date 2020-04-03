@@ -14,7 +14,7 @@ def convert_to_file(link, main_title, dt, content, path):
 
 def add_to_exist_file(link, main_title, dt, content, path):
     
-    with open(path, 'a') as f:
+    with open(path, 'w+') as f:
         f.write(link + "\n")
         f.write(main_title + "\n")
         f.write(dt + "\n")

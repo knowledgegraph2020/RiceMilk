@@ -60,7 +60,7 @@ def get_news_link_JS(response, father_cate):
     return news_link_2
 
 
-def parse_Page(response, first_page = True):
+def parse_Page(response):
 
     
     ''' 打开新闻页面的标题和正文 '''
@@ -117,6 +117,7 @@ def parse_Page(response, first_page = True):
         insidePage_link =["http://industry.cfi.cn/" +  page for page in check_insidePage]
         print(colored("出现了有内页的新闻网站",'red'))
         print(colored(insidePage_link,'red'))
+        
     # 为简讯的文章
     elif jianxun:
         text = title
@@ -138,7 +139,12 @@ def parse_Page(response, first_page = True):
     ### check #######################################################
         
     # 删除已经不存在的页面
-    if title[0] == '--*该页面不存在--' or title[0] == '--~该页面不存在--':
+    if not title:
+        print(colored("Warning: 这一页有一些信息没有被抓取到",'red'))
+        print(colored("response.url",'red'))
+        print(colored(response.xpath('//head/title').extract(),'red'))
+        
+    elif title[0] == '--*该页面不存在--' or title[0] == '--~该页面不存在--':
         title = []
         text = []
         
@@ -164,4 +170,15 @@ def get_time(url):
     time_ = '-'.join([year,month,day])
     
     return time_
+
+
+def getPage(url):
+    """ 提取有内页新闻的页码 """
+    
+    pattern = "(p=)(\s*)(\d+)"
+    match = re.findall(pattern, url)
+    page = match[0][2]
+    
+    return page
+    
             
